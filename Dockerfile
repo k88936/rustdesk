@@ -1,5 +1,16 @@
 FROM debian:bullseye-slim
 
+ARG proxy_scheme="http"
+ARG proxy_host="172.17.0.1"
+ARG proxy_port="7890"
+
+ENV HTTP_PROXY="${proxy_scheme}://${proxy_host}:${proxy_port}" \
+    HTTPS_PROXY="${proxy_scheme}://${proxy_host}:${proxy_port}" \
+    http_proxy="${proxy_scheme}://${proxy_host}:${proxy_port}" \
+    https_proxy="${proxy_scheme}://${proxy_host}:${proxy_port}" \
+    NO_PROXY="localhost,127.0.0.1,::1,.local" \
+    no_proxy="localhost,127.0.0.1,::1,.local"
+
 WORKDIR /
 ARG DEBIAN_FRONTEND=noninteractive
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
@@ -40,7 +51,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.6/cmake-3.30.6
     make && \
     make install
 
-RUN git clone --branch 2023.04.15 --depth=1 https://github.com/microsoft/vcpkg && \
+RUN git clone --depth=1 https://github.com/microsoft/vcpkg && \
     /vcpkg/bootstrap-vcpkg.sh -disableMetrics && \
     /vcpkg/vcpkg --disable-metrics install libvpx libyuv opus aom
 
@@ -60,5 +71,3 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh && \
 
 USER root
 ENV HOME=/home/user
-COPY ./entrypoint.sh /
-ENTRYPOINT ["/entrypoint.sh"]
